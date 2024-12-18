@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  web:
+    build:
+      context: .
+    container_name: django_image_processor
+    # command: gunicorn image_processor.wsgi:application --bind 0.0.0.0:8000
+    command: >
+      sh -c "python manage.py migrate &&
+             gunicorn image_processor.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
+    volumes:
+      - .:/app
+      - ./db.sqlite3:/app/db.sqlite3  # Ensure the file is correctly mapped
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  db:
+    image: nouchka/sqlite3
+    container_name: sqlite_db
+    volumes:
+      - ./db.sqlite3:/data/db.sqlite3
+    ports:
+      - "8080:8080"
